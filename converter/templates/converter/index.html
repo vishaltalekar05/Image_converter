@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Converter</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #e8f0fe;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 50px 16px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 4px 24px rgba(37, 99, 235, 0.12);
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 460px;
+      height: fit-content;
+      border-top: 5px solid #2563eb;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #1e3a8a;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .tagline {
+      text-align: center;
+      color: #6b7280;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin-bottom: 24px;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-bottom: 8px;
+    }
+
+    /* File input */
+    .file-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: #f0f7ff;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .file-wrap:hover { border-color: #2563eb; }
+
+    .file-wrap input[type="file"] {
+      display: none;
+    }
+
+    .file-label-btn {
+      background: #2563eb;
+      color: #fff;
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .file-name-text {
+      font-size: 13px;
+      color: #6b7280;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Dropdown */
+    select {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 14px;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 8px;
+      background: #f0f7ff;
+      color: #1e3a8a;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    select:focus { border-color: #2563eb; }
+
+    /* Convert button */
+    .btn-convert {
+      width: 100%;
+      padding: 13px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 6px;
+      letter-spacing: 0.3px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-convert:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+    }
+
+    /* Result section */
+    .result-section {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .result-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #16a34a;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    /* Preview images side by side */
+    .preview-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .prev-box {
+      flex: 1;
+      text-align: center;
+    }
+    .prev-box p {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6b7280;
+      margin-bottom: 7px;
+    }
+    .prev-box img {
+      width: 100%;
+      max-height: 150px;
+      object-fit: contain;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f9fafb;
+      display: block;
+    }
+    .prev-arrow {
+      font-size: 22px;
+      color: #2563eb;
+      font-weight: 700;
+      padding-top: 40px;
+      flex-shrink: 0;
+    }
+
+    /* Download button */
+    .btn-download {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      background: #16a34a;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-download:hover {
+      background: #15803d;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <h1>Image Converter and Compressor </h1>
+  <p class="tagline">Convert PNG ↔ JPG instantly for free</p>
+  <hr class="divider">
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- File Upload -->
+    <div class="field">
+      <label>Select Image</label>
+      <label class="file-wrap" for="imgFile">
+        <span class="file-label-btn">Choose File</span>
+        <span class="file-name-text" id="fileNameShow">No file chosen</span>
+        <input type="file" id="imgFile" name="image"
+               accept="image/png,image/jpeg" required>
+      </label>
+    </div>
+
+    <!-- Format Dropdown -->
+    <div class="field">
+      <label>Convert To</label>
+      <select name="format">
+        <option value="jpg">Convert to JPG</option>
+        <option value="png">Convert to PNG</option>
+      </select>
+
+      <label class="lbl">Target Size (KB) — Optional</label>
+      <input type="number" name="target_kb" min="10" max="10000" placeholder="Ex: 50 (leave empty for original quality)">
+      <p class="hint">Enter target KB size · Only works for JPG · Leave empty for no compression</p>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn-convert">Convert</button>
+  </form>
+  
+  <!-- Result -->
+  {% if converted_url %}
+  <div class="result-section">
+    <p class="result-title">✅ Conversion Complete!</p>
+
+     {% if orig_size and conv_size %}
+    <div class="size-row">
+      <div class="size-box">
+        <span class="size-lbl">Original Size</span>
+        <span class="size-val">{{ orig_size }} KB</span>
+      </div>
+      <div class="size-box green">
+        <span class="size-lbl">New Size</span>
+        <span class="size-val">{{ conv_size }} KB</span>
+      </div>
+    </div>
+    {% endif %}
+     
+
+    <div class="preview-row">
+      <div class="prev-box">
+        <p>Original</p>
+        <img src="{{ converted_url }}" alt="original">
+      </div>
+      <div class="prev-arrow">→</div>
+      <div class="prev-box">
+        <p>Converted</p>
+        <img src="{{ converted_url }}" alt="converted">
+      </div>
+    </div>
+
+    <a href="{{ converted_url }}" download class="btn-download">
+      ⬇ Download Converted Image
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+document.getElementById('imgFile').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+
+  document.getElementById('fileNameShow').textContent = file.name;
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  const select = document.querySelector('select[name="format"]');
+
+  // Auto opposite format select karo
+  if (ext === 'jpg' || ext === 'jpeg') {
+    select.value = 'png';   // jpg upload → png suggest karo
+  } else if (ext === 'png') {
+    select.value = 'jpg';   // png upload → jpg suggest karo
+  }
+});
+
+document.querySelector('form').addEventListener('submit', function(e) {
+  const file = document.getElementById('imgFile').files[0];
+  const format = document.querySelector('select[name="format"]').value;
+  if (!file) return;
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  const isSame = (ext === 'jpg' || ext === 'jpeg') && format === 'jpg'
+              || (ext === 'png' && format === 'png');
+
+  if (isSame) {
+    e.preventDefault();
+    alert('⚠️ Image already is ' + ext.toUpperCase() + '! Please select a different format.');
+  }
+});
+</script>
+</body>
+</html>
+
+
+

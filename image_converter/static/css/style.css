@@ -1,0 +1,243 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #e8f0fe;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 50px 16px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(37, 99, 235, 0.12);
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 460px;
+  height: fit-content;
+  border-top: 5px solid #2563eb;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1e3a8a;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.tagline {
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 28px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.field {
+  margin-bottom: 18px;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin-bottom: 8px;
+}
+
+.file-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #f0f7ff;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.file-wrap:hover {
+  border-color: #2563eb;
+}
+
+.file-wrap input[type="file"] {
+  display: none;
+}
+
+.file-label-btn {
+  background: #2563eb;
+  color: #fff;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.file-name-text {
+  font-size: 13px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+select {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 14px;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 8px;
+  background: #f0f7ff;
+  color: #1e3a8a;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+select:focus {
+  border-color: #2563eb;
+}
+
+.btn-convert {
+  width: 100%;
+  padding: 13px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 6px;
+  letter-spacing: 0.3px;
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-convert:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.result-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.result-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #16a34a;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.preview-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.prev-box {
+  flex: 1;
+  text-align: center;
+}
+
+.prev-box p {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+  margin-bottom: 7px;
+}
+
+.prev-box img {
+  width: 100%;
+  max-height: 150px;
+  object-fit: contain;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  display: block;
+}
+
+.prev-arrow {
+  font-size: 22px;
+  color: #2563eb;
+  font-weight: 700;
+  padding-top: 40px;
+  flex-shrink: 0;
+}
+
+.btn-download {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  background: #16a34a;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-download:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+
+input[type="number"] {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 8px;
+  background: #f0f7ff;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e3a8a;
+  outline: none;
+  margin-bottom: 6px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"]:focus {
+  border-color: #2563eb;
+  background: #e8f0fe;
+}
+
+
+.hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
