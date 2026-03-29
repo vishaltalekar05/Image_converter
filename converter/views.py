@@ -5,8 +5,8 @@ import os
 import tempfile
 
 def upload_and_convert(request):
+    if request.method == 'POST' and request.FILES.ge['image']:
 
-    if request.method == 'POST' and request.FILES['image']:
         uploaded_file = request.FILES['image']
         target_format = request.POST['format']
 
