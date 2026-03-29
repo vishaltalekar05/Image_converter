@@ -44,34 +44,6 @@
   <div class="error">{{ error_msg }}</div>
   {% endif %}
 
-  {% if converted_url %}
-  <div class="result">
-    <p class="done">✅ Conversion Complete!</p>
-
-    <div class="size-row">
-      <div class="size-box">
-        <span class="size-lbl">Original Size</span>
-        <span class="size-val">{{ orig_size }} KB</span>
-      </div>
-      <div class="size-box green">
-        <span class="size-lbl">New Size</span>
-        <span class="size-val">{{ conv_size }} KB</span>
-      </div>
-    </div>
-
-    <div class="preview">
-      <div class="pbox">
-        <p>Converted Image</p>
-        <img src="{{ converted_url }}" alt="converted">
-      </div>
-    </div>
-
-    <a href="{{ download_url }}" download="{{ converted_name }}" class="btn-download">
-      ⬇ Download Image
-    </a>
-  </div>
-  {% endif %}
-
 </div>
 
 </body>
