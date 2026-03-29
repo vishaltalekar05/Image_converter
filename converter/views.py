@@ -2,12 +2,22 @@ from django.shortcuts import render
 from PIL import Image
 import os, io
 from django.conf import settings
+import cloudinary
+import cloudinary.uploader
+
+cloudinary.config(
+    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key    = os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret = os.environ.get('CLOUDINARY_API_SECRET'),
+)
 
 def index(request):
-    converted_url = None
     error_msg = None
     orig_size = None
     conv_size = None
+    converted_url = None
+    download_url = None
+    converted_name = None
 
     if request.method == 'POST':
         f = request.FILES.get('image')
@@ -31,44 +41,52 @@ def index(request):
                     bg.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
                     img = bg
 
-                original_name = os.path.splitext(f.name)[0]
-                name = original_name + '_converted.' + ext_out
-                os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
-                save_path = os.path.join(settings.MEDIA_ROOT, name)
+                buffer = io.BytesIO()
+                orig_size = round(f.size / 1024, 1)
 
                 if target_kb and target_kb.isdigit() and pil_fmt == 'JPEG':
-                    # Target size ke liye quality dhundho
                     target_bytes = int(target_kb) * 1024
                     low, high = 1, 95
                     best_quality = 85
 
                     for _ in range(10):
                         mid = (low + high) // 2
-                        buffer = io.BytesIO()
-                        img.save(buffer, format='JPEG', quality=mid, optimize=True)
-                        size = buffer.tell()
-
+                        buf = io.BytesIO()
+                        img.save(buf, format='JPEG', quality=mid, optimize=True)
+                        size = buf.tell()
                         if size <= target_bytes:
                             best_quality = mid
                             low = mid + 1
                         else:
                             high = mid - 1
 
-                    img.save(save_path, format='JPEG', quality=best_quality, optimize=True)
-
+                    img.save(buffer, format='JPEG', quality=best_quality, optimize=True)
                 elif pil_fmt == 'JPEG':
-                    img.save(save_path, format='JPEG', quality=85, optimize=True)
-
+                    img.save(buffer, format='JPEG', quality=85, optimize=True)
                 else:
-                    img.save(save_path, format='PNG', optimize=True)
+                    img.save(buffer, format='PNG', optimize=True)
 
-                orig_size = round(f.size / 1024, 1)
-                conv_size = round(os.path.getsize(save_path) / 1024, 1)
-                converted_url = settings.MEDIA_URL + name
+                buffer.seek(0)
+                conv_size = round(len(buffer.getvalue()) / 1024, 1)
+
+                # Cloudinary pe upload karo
+                original_name = os.path.splitext(f.name)[0]
+                upload_result = cloudinary.uploader.upload(
+                    buffer,
+                    public_id=original_name + '_converted',
+                    format=ext_out,
+                    overwrite=True,
+                )
+
+                converted_url = upload_result['secure_url']
+                download_url = upload_result['secure_url']
+                converted_name = original_name + '_converted.' + ext_out
 
     return render(request, 'converter/index.html', {
-        'converted_url': converted_url,
         'error_msg': error_msg,
         'orig_size': orig_size,
         'conv_size': conv_size,
+        'converted_url': converted_url,
+        'download_url': download_url,
+        'converted_name': converted_name,
     })
