@@ -237,10 +237,12 @@
         <option value="jpg">Convert to JPG</option>
         <option value="png">Convert to PNG</option>
       </select>
+    </div>
 
-      <label class="lbl">Target Size (KB) — Optional</label>
+    <div class="field">
+      <label> Target Size (KB) — Optional</label>
       <input type="number" name="target_kb" min="10" max="10000" placeholder="Ex: 50 (leave empty for original quality)">
-      <p class="hint">Enter target KB size · Only works for JPG · Leave empty for no compression</p>
+      <p class="hint"> Only for JPG · Leave empty for no compression</p>
     </div>
 
     <!-- Submit -->
@@ -269,7 +271,7 @@
     <div class="preview-row">
       <div class="prev-box">
         <p>Original</p>
-        <img src="{{ converted_url }}" alt="original">
+        <img src="{{ original_preview }}" alt="original">
       </div>
       <div class="prev-arrow">→</div>
       <div class="prev-box">
@@ -278,7 +280,7 @@
       </div>
     </div>
 
-    <a href="{{ converted_url }}" download class="btn-download">
+    <a href="{{ download_url }}" download="{{ download_name }}" class="btn-download">
       ⬇ Download Converted Image
     </a>
   </div>
@@ -321,5 +323,3 @@ document.querySelector('form').addEventListener('submit', function(e) {
 </script>
 </body>
 </html>
-
-
