@@ -16,96 +16,98 @@ def index(request):
             if (ext in ['jpg', 'jpeg'] and fmt == 'jpg') or (ext == 'png' and fmt == 'png'):
                 error_msg = 'Image is already ' + ext.upper() + '! Please select a different format.'
             else:
+                f.seek(0)
+                orig_bytes = f.read()
+
+                # File size check
+                if len(orig_bytes) > 5 * 1024 * 1024:
+                    return render(request, 'converter/index.html', {
+                        'error_msg': 'File too large! Please upload image smaller than 5MB.',
+                    })
+
+                orig_mime = 'jpeg' if ext in ['jpg', 'jpeg'] else 'png'
+                original_preview = 'data:image/' + orig_mime + ';base64,' + base64.b64encode(orig_bytes).decode('utf-8')
+
+                f.seek(0)
                 img = Image.open(f)
+                img.load()
+
+                # Large image resize
+                if img.width > 1200 or img.height > 1200:
+                    img.thumbnail((1200, 1200), Image.LANCZOS)
+
                 pil_fmt = 'JPEG' if fmt == 'jpg' else 'PNG'
                 ext_out = 'jpg' if fmt == 'jpg' else 'png'
 
-                # ✅ RGBA fix for JPEG
-                if pil_fmt == 'JPEG' and img.mode in ('RGBA', 'P', 'LA'):
+                if pil_fmt == 'JPEG' and img.mode != 'RGB':
                     bg = Image.new('RGB', img.size, (255, 255, 255))
                     if img.mode == 'P':
                         img = img.convert('RGBA')
-                    bg.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                    if img.mode in ('RGBA', 'LA'):
+                        bg.paste(img, mask=img.split()[-1])
+                    else:
+                        bg.paste(img)
                     img = bg
 
-                buffer = io.BytesIO()
+                out = io.BytesIO()
 
-                # =========================
-                # 🔥 JPEG COMPRESSION
-                # =========================
                 if target_kb and target_kb.isdigit() and pil_fmt == 'JPEG':
                     target_bytes = int(target_kb) * 1024
-                    original_bytes = f.size
+                    chosen = None
 
-                    if original_bytes <= target_bytes:
-                        # already small → don't increase
-                        img.save(buffer, format='JPEG', quality=75, optimize=True)
+                    for q in range(95, 0, -1):
+                        tmp = io.BytesIO()
+                        img.save(tmp, format='JPEG', quality=q, optimize=True)
+                        if tmp.tell() <= target_bytes:
+                            chosen = tmp.getvalue()
+                            break
+
+                    if chosen:
+                        out.write(chosen)
                     else:
-                        low, high = 5, 95
-                        best_data = None
-
-                        while low <= high:
-                            mid = (low + high) // 2
-                            temp_buf = io.BytesIO()
-                            img.save(temp_buf, format='JPEG', quality=mid, optimize=True)
-                            size = temp_buf.tell()
-
-                            if size <= target_bytes:
-                                best_data = temp_buf.getvalue()
-                                low = mid + 1
-                            else:
-                                high = mid - 1
-
-                        if best_data:
-                            buffer.write(best_data)
-                        else:
-                            img.save(buffer, format='JPEG', quality=5, optimize=True)
+                        img.save(out, format='JPEG', quality=1, optimize=True)
 
                 elif pil_fmt == 'JPEG':
-                    img.save(buffer, format='JPEG', quality=85, optimize=True)
-
-                # =========================
-                # 🔥 PNG COMPRESSION (FIXED)
-                # =========================
-                elif pil_fmt == 'PNG':
-                    target_bytes = int(target_kb) * 1024 if target_kb.isdigit() else None
-
-                    if target_bytes:
-                        width, height = img.size
-
-                        while True:
-                            temp_buf = io.BytesIO()
-                            img.save(temp_buf, format='PNG', optimize=True, compress_level=9)
-                            size = temp_buf.tell()
-
-                            if size <= target_bytes or width < 100:
-                                buffer.write(temp_buf.getvalue())
+                    orig_buf = io.BytesIO()
+                    img.save(orig_buf, format='JPEG', quality=85, optimize=True)
+                    if orig_buf.tell() > len(orig_bytes):
+                        for q in range(85, 0, -1):
+                            tmp = io.BytesIO()
+                            img.save(tmp, format='JPEG', quality=q, optimize=True)
+                            if tmp.tell() <= len(orig_bytes):
+                                out.write(tmp.getvalue())
                                 break
-
-                            # 🔥 resize reduce
-                            width = int(width * 0.9)
-                            height = int(height * 0.9)
-                            img = img.resize((width, height))
-
+                        else:
+                            img.save(out, format='JPEG', quality=85, optimize=True)
                     else:
-                        img.save(buffer, format='PNG', optimize=True, compress_level=9)
+                        out.write(orig_buf.getvalue())
 
-                buffer.seek(0)
+                else:
+                    if target_kb and target_kb.isdigit():
+                        target_bytes = int(target_kb) * 1024
+                        scale = 1.0
+                        while scale > 0.1:
+                            tmp = io.BytesIO()
+                            new_w = int(img.width * scale)
+                            new_h = int(img.height * scale)
+                            resized = img.resize((new_w, new_h), Image.LANCZOS)
+                            resized.save(tmp, format='PNG', optimize=True)
+                            if tmp.tell() <= target_bytes:
+                                out.write(tmp.getvalue())
+                                break
+                            scale -= 0.05
+                        else:
+                            img.save(out, format='PNG', optimize=True)
+                    else:
+                        img.save(out, format='PNG', optimize=True)
 
-                # =========================
-                # Preview + Download
-                # =========================
+                out.seek(0)
+                data = out.getvalue()
+
                 original_name = os.path.splitext(f.name)[0]
                 download_name = original_name + '_converted.' + ext_out
-                ext_out_mime = 'jpeg' if pil_fmt == 'JPEG' else 'png'
-
-                conv_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-                converted_url = f'data:image/{ext_out_mime};base64,{conv_b64}'
-
-                f.seek(0)
-                orig_b64 = base64.b64encode(f.read()).decode('utf-8')
-                orig_mime = 'jpeg' if ext in ['jpg', 'jpeg'] else 'png'
-                original_preview = f'data:image/{orig_mime};base64,{orig_b64}'
+                ext_mime = 'jpeg' if pil_fmt == 'JPEG' else 'png'
+                converted_url = 'data:image/' + ext_mime + ';base64,' + base64.b64encode(data).decode('utf-8')
 
                 return render(request, 'converter/index.html', {
                     'error_msg': None,
@@ -113,8 +115,8 @@ def index(request):
                     'original_preview': original_preview,
                     'download_url': converted_url,
                     'download_name': download_name,
-                    'orig_size': round(f.size / 1024, 1),
-                    'conv_size': round(len(buffer.getvalue()) / 1024, 1),
+                    'orig_size': round(len(orig_bytes) / 1024, 1),
+                    'conv_size': round(len(data) / 1024, 1),
                 })
 
     return render(request, 'converter/index.html', {
