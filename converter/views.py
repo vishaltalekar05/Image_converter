@@ -26,8 +26,13 @@ def index(request):
                     })
 
                 orig_mime = 'jpeg' if ext in ['jpg', 'jpeg'] else 'png'
-                original_preview = 'data:image/' + orig_mime + ';base64,' + base64.b64encode(orig_bytes).decode('utf-8')
-
+                prev_img = Image.open(io.BytesIO(orig_bytes))
+                prev_img.thumbnail((400, 400), Image.LANCZOS)
+                prev_buf = io.BytesIO()
+                prev_img.save(prev_buf, format='JPEG' if orig_mime == 'jpeg' else 'PNG', quality=60)
+                prev_buf.seek(0)
+                original_preview = 'data:image/' + orig_mime + ';base64,' + base64.b64encode(prev_buf.getvalue()).decode('utf-8')
+                
                 f.seek(0)
                 img = Image.open(f)
                 img.load()
